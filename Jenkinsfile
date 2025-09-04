@@ -2,50 +2,37 @@ pipeline {
     agent any
 
     environment {
-        REMOTE_HOST = "stas"  // IP або hostname твоєї VM
-        SSH_KEY_ID = "jenkins_ssh_key"     // SSH Key у Jenkins Credentials
+        // зміни під свою VM
+        REMOTE_USER = 'stas'                 // твій користувач VM
+        REMOTE_HOST = '10.0.2.15'         // IP твоєї VM
+        SSH_KEY = "C:\\Users\\Адмін\\jenkins_key"  // шлях до приватного ключа
     }
 
     stages {
         stage('Install Apache2') {
             steps {
-                echo "Installing Apache..."
-                sshagent([env.SSH_KEY_ID]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no $REMOTE_HOST << EOF
-                        sudo apt update -y
-                        sudo apt install -y apache2
-                        sudo systemctl enable apache2
-                        sudo systemctl start apache2
-                        EOF
-                    """
-                }
+                echo 'Installing Apache on remote VM...'
+                bat """
+                  ssh -i %SSH_KEY% -o StrictHostKeyChecking=no %REMOTE_USER%@%REMOTE_HOST% "sudo apt update && sudo apt install -y apache2"
+                """
             }
         }
 
         stage('Verify Apache') {
             steps {
-                sshagent([env.SSH_KEY_ID]) {
-                    sh """
-                        ssh $REMOTE_HOST "apache2 -v || httpd -v"
-                    """
-                }
+                echo 'Checking if Apache is running...'
+                bat """
+                  ssh -i %SSH_KEY% -o StrictHostKeyChecking=no %REMOTE_USER%@%REMOTE_HOST% "systemctl status apache2 | grep Active"
+                """
             }
         }
 
         stage('Check Logs for 4xx/5xx') {
             steps {
-                sshagent([env.SSH_KEY_ID]) {
-                    sh """
-                        ssh $REMOTE_HOST << EOF
-                        LOG_FILE="/var/log/apache2/access.log"
-                        echo "4xx Errors:"
-                        grep "HTTP/1.[01]\" [4][0-9][0-9]" \$LOG_FILE || echo "No 4xx errors found."
-                        echo "5xx Errors:"
-                        grep "HTTP/1.[01]\" [5][0-9][0-9]" \$LOG_FILE || echo "No 5xx errors found."
-                        EOF
-                    """
-                }
+                echo 'Checking Apache logs for errors...'
+                bat """
+                  ssh -i %SSH_KEY% -o StrictHostKeyChecking=no %REMOTE_USER%@%REMOTE_HOST% "grep -E ' 4[0-9]{2} | 5[0-9]{2} ' /var/log/apache2/access.log || echo 'No 4xx/5xx errors found'"
+                """
             }
         }
     }
