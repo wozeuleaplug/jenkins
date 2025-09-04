@@ -5,7 +5,7 @@ pipeline {
         // зміни під свою VM
         REMOTE_USER = 'stas'                 // твій користувач VM
         REMOTE_HOST = '10.0.2.15'         // IP твоєї VM
-        SSH_KEY = "C:\\Users\\Адмін\\jenkins_key"  // шлях до приватного ключа
+        SSH_KEY = "C:\\jenkins_key\\jenkins_key"  // шлях до приватного ключа
     }
 
     stages {
