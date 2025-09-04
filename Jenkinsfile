@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REMOTE_HOST = "user@remote_vm_ip"  // IP або hostname твоєї VM
+        REMOTE_HOST = "stas"  // IP або hostname твоєї VM
         SSH_KEY_ID = "jenkins_ssh_key"     // SSH Key у Jenkins Credentials
     }
 
