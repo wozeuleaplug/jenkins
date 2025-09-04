@@ -4,29 +4,41 @@ pipeline {
     stages {
         stage('Install Apache2') {
             steps {
-                echo "Installing Apache on remote VM..."
-                bat """
-                ssh -i C:\\jenkins_key\\jenkins_key -p 2222 -o StrictHostKeyChecking=no stas@127.0.0.1 "sudo apt update && sudo apt install -y apache2"
-                """
+                script {
+                    // Для Ubuntu/Debian
+                    sh '''
+                    sudo apt update
+                    sudo apt install -y apache2
+                    sudo systemctl start apache2
+                    sudo systemctl enable apache2
+                    '''
+                    
+                }
             }
         }
-
-        stage('Verify Apache') {
+        stage('Check Apache2 Status') {
             steps {
-                echo "Checking if Apache is running..."
-                bat """
-                ssh -i C:\\jenkins_key\\jenkins_key -p 2222 -o StrictHostKeyChecking=no stas@127.0.0.1 "systemctl status apache2 | grep active"
-                """
+                sh 'systemctl status apache2 || systemctl status httpd'
             }
         }
-
-        stage('Check Logs for 4xx/5xx') {
+        stage('Read Logs and Check Errors') {
             steps {
-                echo "Checking Apache logs..."
-                bat """
-                ssh -i C:\\jenkins_key\\jenkins_key -p 2222 -o StrictHostKeyChecking=no stas@127.0.0.1 "grep -E ' 4[0-9]{2} | 5[0-9]{2} ' /var/log/apache2/access.log || echo 'No 4xx/5xx errors found'"
-                """
+                sh '''
+                # Витяг 4xx і 5xx з логів
+                if [ -f /var/log/apache2/access.log ]; then
+                    echo "Errors in Apache2 logs:"
+                    grep " 4[0-9][0-9] " /var/log/apache2/access.log
+                    grep " 5[0-9][0-9] " /var/log/apache2/access.log
+                elif [ -f /var/log/httpd/access_log ]; then
+                    echo "Errors in httpd logs:"
+                    grep " 4[0-9][0-9] " /var/log/httpd/access_log
+                    grep " 5[0-9][0-9] " /var/log/httpd/access_log
+                else
+                    echo "No log file found"
+                fi
+                '''
             }
         }
     }
 }
+
