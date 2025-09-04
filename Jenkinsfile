@@ -6,7 +6,7 @@ pipeline {
             steps {
                 script {
                     // Для Ubuntu/Debian
-                    bat '''
+                    sh '''
                     sudo apt update
                     sudo apt install -y apache2
                     sudo systemctl start apache2
@@ -18,12 +18,12 @@ pipeline {
         }
         stage('Check Apache2 Status') {
             steps {
-                bat 'systemctl status apache2 || systemctl status httpd'
+                sh 'systemctl status apache2 || systemctl status httpd'
             }
         }
         stage('Read Logs and Check Errors') {
             steps {
-                bat '''
+                sh '''
                 # Витяг 4xx і 5xx з логів
                 if [ -f /var/log/apache2/access.log ]; then
                     echo "Errors in Apache2 logs:"
