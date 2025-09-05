@@ -1,44 +1,35 @@
 pipeline {
-    agent any
+    agent { label 'Ubuntu-Agent' }
 
     stages {
-        stage('Install Apache2') {
-            steps {
-                script {
-                    // Для Ubuntu/Debian
-                    sh '''
-                    sudo apt update
-                    sudo apt install -y apache2
-                    sudo systemctl start apache2
-                    sudo systemctl enable apache2
-                    '''
-                    
-                }
-            }
-        }
-        stage('Check Apache2 Status') {
-            steps {
-                sh 'systemctl status apache2 || systemctl status httpd'
-            }
-        }
-        stage('Read Logs and Check Errors') {
+        stage('Update system') {
             steps {
                 sh '''
-                # Витяг 4xx і 5xx з логів
-                if [ -f /var/log/apache2/access.log ]; then
-                    echo "Errors in Apache2 logs:"
-                    grep " 4[0-9][0-9] " /var/log/apache2/access.log
-                    grep " 5[0-9][0-9] " /var/log/apache2/access.log
-                elif [ -f /var/log/httpd/access_log ]; then
-                    echo "Errors in httpd logs:"
-                    grep " 4[0-9][0-9] " /var/log/httpd/access_log
-                    grep " 5[0-9][0-9] " /var/log/httpd/access_log
-                else
-                    echo "No log file found"
-                fi
+                sudo apt-get update -y
+                '''
+            }
+        }
+        stage('Install Apache2') {
+            steps {
+                sh '''
+                sudo apt-get install -y apache2
+                sudo systemctl enable apache2
+                sudo systemctl start apache2
+                '''
+            }
+        }
+        stage('Check Apache status') {
+            steps {
+                sh 'systemctl status apache2 | grep Active'
+            }
+        }
+        stage('Check Apache logs for errors') {
+            steps {
+                sh '''
+                echo "Checking Apache logs for 4xx and 5xx errors..."
+                sudo grep "HTTP/1.1\" [45][0-9][0-9]" /var/log/apache2/access.log || echo "No errors found"
                 '''
             }
         }
     }
 }
-
