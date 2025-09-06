@@ -37,7 +37,7 @@ pipeline {
             steps {
                 sh '''
                 echo "=== Checking access.log for 4xx and 5xx ==="
-                sudo grep "HTTP/1.1\\\\\" [45][0-9][0-9]" /var/log/apache2/access.log || echo "No errors found"
+                sudo grep 'HTTP/1.1" [45][0-9][0-9]' /var/log/apache2/access.log || echo "No errors found"
 
                 echo "=== Last 20 lines of error.log ==="
                 sudo tail -n 20 /var/log/apache2/error.log
