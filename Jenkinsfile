@@ -5,7 +5,7 @@ pipeline {
         stage('Update system') {
             steps {
                 sh '''
-                echo "=== Оновлення системи ==="
+                echo "=== Updating system ==="
                 sudo apt-get update -y
                 '''
             }
@@ -14,7 +14,7 @@ pipeline {
         stage('Install Apache2') {
             steps {
                 sh '''
-                echo "=== Встановлюємо Apache2 ==="
+                echo "=== Installing Apache2 ==="
                 sudo apt-get install -y apache2
                 sudo systemctl enable apache2
                 sudo systemctl start apache2
@@ -25,9 +25,9 @@ pipeline {
         stage('Check Apache status') {
             steps {
                 sh '''
-                echo "=== Перевіряємо статус Apache ==="
+                echo "=== Checking Apache status ==="
                 sudo systemctl status apache2 --no-pager
-                echo "=== Перевіряємо відповідь від локального сервера ==="
+                echo "=== Checking local server response ==="
                 curl -I http://localhost | head -n 5
                 '''
             }
@@ -36,10 +36,10 @@ pipeline {
         stage('Check Apache Logs for errors') {
             steps {
                 sh '''
-                echo "=== Перевірка access.log на 4xx та 5xx ==="
-                sudo grep "HTTP/1.1\\\" [45][0-9][0-9]" /var/log/apache2/access.log || echo "Помилок не знайдено"
+                echo "=== Checking access.log for 4xx and 5xx ==="
+                sudo grep "HTTP/1.1\\\\\" [45][0-9][0-9]" /var/log/apache2/access.log || echo "No errors found"
 
-                echo "=== Останні 20 рядків error.log ==="
+                echo "=== Last 20 lines of error.log ==="
                 sudo tail -n 20 /var/log/apache2/error.log
                 '''
             }
